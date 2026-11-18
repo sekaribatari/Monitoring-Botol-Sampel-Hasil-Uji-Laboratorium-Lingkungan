@@ -1,0 +1,6 @@
+{
+  "name": "LabTrace — Monitoring Botol Sampel & Sertifikat Uji",
+  "description": "Sistem identifikasi botol sampel laboratorium, pelacakan serah terima tim teknis lapangan, monitoring parameter uji, hingga penerbitan sertifikat hasil uji resmi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

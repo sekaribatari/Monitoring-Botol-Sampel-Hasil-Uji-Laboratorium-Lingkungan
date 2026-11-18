@@ -1,0 +1,331 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Profil pengguna laboratorium yang masuk menggunakan akun Google.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "role": {
+          "type": "string",
+          "enum": ["staff"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "email", "role", "createdAt", "updatedAt"]
+    },
+    "SampleBottle": {
+      "title": "SampleBottle",
+      "description": "Rekaman botol sampel laboratorium dari penerimaan tim teknis hingga sertifikat terbit.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sampleCode": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "sealNumber": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "workOrderNo": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "companyName": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "companyPic": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "samplingLocation": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "matrix": {
+          "type": "string",
+          "enum": [
+            "Air Limbah",
+            "Air Bersih",
+            "Air Permukaan",
+            "Udara & Emisi",
+            "Tanah & Sedimen",
+            "Oli & Pelumas"
+          ]
+        },
+        "containerType": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "bottleCount": {
+          "type": "integer"
+        },
+        "sealCondition": {
+          "type": "string",
+          "enum": ["Segel Utuh", "Segel Pengaman Ganda", "Perlu Verifikasi Ulang"]
+        },
+        "temperatureOnReceipt": {
+          "type": "number"
+        },
+        "fieldTechnician": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "labReceiver": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "sampledAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "receivedAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "dueDate": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "Diterima Lab",
+            "Preparasi",
+            "Proses Uji",
+            "Verifikasi QC",
+            "Sertifikat Terbit"
+          ]
+        },
+        "rackLocation": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "parameters": {
+          "type": "array"
+        },
+        "custodyLogs": {
+          "type": "array"
+        },
+        "certificate": {
+          "type": "object"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "sampleCode",
+        "sealNumber",
+        "workOrderNo",
+        "companyName",
+        "companyPic",
+        "samplingLocation",
+        "matrix",
+        "containerType",
+        "bottleCount",
+        "sealCondition",
+        "temperatureOnReceipt",
+        "fieldTechnician",
+        "labReceiver",
+        "sampledAt",
+        "receivedAt",
+        "dueDate",
+        "stage",
+        "rackLocation",
+        "notes",
+        "parameters",
+        "custodyLogs",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SamplePhoto": {
+      "title": "SamplePhoto",
+      "description": "Dokumentasi foto fisik botol sampel, segel pengaman, dan kondisi penerimaan.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sampleId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Segel & Botol", "Kondisi Penerimaan", "Preparasi & Uji"]
+        },
+        "caption": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "fileName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "dataUrl": {
+          "type": "string",
+          "maxLength": 280000
+        },
+        "uploadedBy": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "sampleId",
+        "ownerId",
+        "category",
+        "caption",
+        "fileName",
+        "dataUrl",
+        "uploadedBy",
+        "createdAt"
+      ]
+    },
+    "CustomParameter": {
+      "title": "CustomParameter",
+      "description": "Standar parameter uji kustom yang ditambahkan pengguna ke katalog laboratorium.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "matrix": {
+          "type": "string",
+          "enum": [
+            "Air Limbah",
+            "Air Bersih",
+            "Air Permukaan",
+            "Udara & Emisi",
+            "Tanah & Sedimen",
+            "Oli & Pelumas"
+          ]
+        },
+        "method": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "limitText": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "limitMax": {
+          "type": "number"
+        },
+        "recommendedContainer": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "name",
+        "matrix",
+        "method",
+        "unit",
+        "limitText",
+        "recommendedContainer",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Data profil akun Google yang terautentikasi (terisolasi per pemilik dan admin)."
+    },
+    "/samples/{sampleId}": {
+      "schema": { "$ref": "#/entities/SampleBottle" },
+      "description": "Dokumen botol sampel laboratorium beserta parameter uji, jejak serah terima, dan sertifikat."
+    },
+    "/samples/{sampleId}/photos/{photoId}": {
+      "schema": { "$ref": "#/entities/SamplePhoto" },
+      "description": "Subkoleksi foto fisik botol sampel dan segel pengaman."
+    },
+    "/customParameters/{paramId}": {
+      "schema": { "$ref": "#/entities/CustomParameter" },
+      "description": "Standar parameter uji kustom milik pengguna laboratorium."
+    }
+  }
+}

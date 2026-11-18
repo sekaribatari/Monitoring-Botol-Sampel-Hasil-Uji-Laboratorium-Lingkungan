@@ -1,0 +1,361 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global hardened primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'sekaribatari@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Validation blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'photoURL', 'role', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500))
+        && data.role == 'staff'
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidMatrix(m) {
+      return m in [
+        'Air Limbah',
+        'Air Bersih',
+        'Air Permukaan',
+        'Udara & Emisi',
+        'Tanah & Sedimen',
+        'Oli & Pelumas'
+      ];
+    }
+
+    function isValidStage(s) {
+      return s in [
+        'Diterima Lab',
+        'Preparasi',
+        'Proses Uji',
+        'Verifikasi QC',
+        'Sertifikat Terbit'
+      ];
+    }
+
+    function isValidCertificate(cert) {
+      return cert is map
+        && cert.keys().hasAll([
+          'certificateNumber',
+          'issuedAt',
+          'issuedBy',
+          'technicalManager',
+          'verificationHash',
+          'conclusion',
+          'accreditationRef'
+        ])
+        && cert.keys().hasOnly([
+          'certificateNumber',
+          'issuedAt',
+          'issuedBy',
+          'technicalManager',
+          'verificationHash',
+          'conclusion',
+          'accreditationRef'
+        ])
+        && cert.certificateNumber is string && cert.certificateNumber.size() >= 3 && cert.certificateNumber.size() <= 60
+        && cert.issuedAt is string && cert.issuedAt.size() <= 40
+        && cert.issuedBy is string && cert.issuedBy.size() <= 160
+        && cert.technicalManager is string && cert.technicalManager.size() <= 120
+        && cert.verificationHash is string && cert.verificationHash.size() <= 80
+        && cert.conclusion is string && cert.conclusion.size() <= 500
+        && cert.accreditationRef is string && cert.accreditationRef.size() <= 160;
+    }
+
+    function isValidSampleBottle(data) {
+      return data.keys().hasAll([
+          'id',
+          'ownerId',
+          'sampleCode',
+          'sealNumber',
+          'workOrderNo',
+          'companyName',
+          'companyPic',
+          'samplingLocation',
+          'matrix',
+          'containerType',
+          'bottleCount',
+          'sealCondition',
+          'temperatureOnReceipt',
+          'fieldTechnician',
+          'labReceiver',
+          'sampledAt',
+          'receivedAt',
+          'dueDate',
+          'stage',
+          'rackLocation',
+          'notes',
+          'parameters',
+          'custodyLogs',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'ownerId',
+          'sampleCode',
+          'sealNumber',
+          'workOrderNo',
+          'companyName',
+          'companyPic',
+          'samplingLocation',
+          'matrix',
+          'containerType',
+          'bottleCount',
+          'sealCondition',
+          'temperatureOnReceipt',
+          'fieldTechnician',
+          'labReceiver',
+          'sampledAt',
+          'receivedAt',
+          'dueDate',
+          'stage',
+          'rackLocation',
+          'notes',
+          'parameters',
+          'custodyLogs',
+          'certificate',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && data.sampleCode is string && data.sampleCode.size() >= 2 && data.sampleCode.size() <= 40
+        && data.sealNumber is string && data.sealNumber.size() >= 2 && data.sealNumber.size() <= 40
+        && data.workOrderNo is string && data.workOrderNo.size() <= 60
+        && data.companyName is string && data.companyName.size() >= 1 && data.companyName.size() <= 160
+        && data.companyPic is string && data.companyPic.size() <= 120
+        && data.samplingLocation is string && data.samplingLocation.size() >= 1 && data.samplingLocation.size() <= 240
+        && isValidMatrix(data.matrix)
+        && data.containerType is string && data.containerType.size() >= 1 && data.containerType.size() <= 160
+        && data.bottleCount is int && data.bottleCount >= 1 && data.bottleCount <= 100
+        && data.sealCondition in ['Segel Utuh', 'Segel Pengaman Ganda', 'Perlu Verifikasi Ulang']
+        && data.temperatureOnReceipt is number && data.temperatureOnReceipt >= -30 && data.temperatureOnReceipt <= 60
+        && data.fieldTechnician is string && data.fieldTechnician.size() >= 1 && data.fieldTechnician.size() <= 120
+        && data.labReceiver is string && data.labReceiver.size() >= 1 && data.labReceiver.size() <= 120
+        && data.sampledAt is string && data.sampledAt.size() <= 40
+        && data.receivedAt is string && data.receivedAt.size() <= 40
+        && data.dueDate is string && data.dueDate.size() <= 20
+        && isValidStage(data.stage)
+        && data.rackLocation is string && data.rackLocation.size() <= 80
+        && data.notes is string && data.notes.size() <= 1000
+        && data.parameters is list && data.parameters.size() >= 1 && data.parameters.size() <= 50 && data.parameters[0] is map
+        && data.custodyLogs is list && data.custodyLogs.size() >= 1 && data.custodyLogs.size() <= 100 && data.custodyLogs[0] is map
+        && (!('certificate' in data) || isValidCertificate(data.certificate))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function ownsParentSample(sampleId) {
+      return get(/databases/$(database)/documents/samples/$(sampleId)).data.ownerId == request.auth.uid;
+    }
+
+    function ownsParentSampleAfter(sampleId) {
+      return existsAfter(/databases/$(database)/documents/samples/$(sampleId))
+        && getAfter(/databases/$(database)/documents/samples/$(sampleId)).data.ownerId == request.auth.uid;
+    }
+
+    function isValidSamplePhoto(data, sampleId) {
+      return data.keys().hasAll([
+          'id',
+          'sampleId',
+          'ownerId',
+          'category',
+          'caption',
+          'fileName',
+          'dataUrl',
+          'uploadedBy',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'sampleId',
+          'ownerId',
+          'category',
+          'caption',
+          'fileName',
+          'dataUrl',
+          'uploadedBy',
+          'createdAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.sampleId) && data.sampleId == sampleId
+        && isValidId(data.ownerId)
+        && data.category in ['Segel & Botol', 'Kondisi Penerimaan', 'Preparasi & Uji']
+        && data.caption is string && data.caption.size() >= 1 && data.caption.size() <= 160
+        && data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 120
+        && data.dataUrl is string && data.dataUrl.size() >= 20 && data.dataUrl.size() <= 280000
+        && data.uploadedBy is string && data.uploadedBy.size() >= 1 && data.uploadedBy.size() <= 120
+        && data.createdAt is timestamp;
+    }
+
+    function isValidCustomParameter(data) {
+      return data.keys().hasAll([
+          'id',
+          'ownerId',
+          'name',
+          'matrix',
+          'method',
+          'unit',
+          'limitText',
+          'recommendedContainer',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'ownerId',
+          'name',
+          'matrix',
+          'method',
+          'unit',
+          'limitText',
+          'limitMax',
+          'recommendedContainer',
+          'createdAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.ownerId)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && isValidMatrix(data.matrix)
+        && data.method is string && data.method.size() >= 1 && data.method.size() <= 120
+        && data.unit is string && data.unit.size() >= 1 && data.unit.size() <= 40
+        && data.limitText is string && data.limitText.size() >= 1 && data.limitText.size() <= 60
+        && (!('limitMax' in data) || data.limitMax is number)
+        && data.recommendedContainer is string && data.recommendedContainer.size() >= 1 && data.recommendedContainer.size() <= 160
+        && data.createdAt is timestamp;
+    }
+
+    // Users collection (PII isolated to owner or admin)
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && isValidId(userId)
+        && userId == request.auth.uid
+        && isValidUserProfile(incoming())
+        && incoming().uid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(userId)
+        && isValidUserProfile(incoming())
+        && (userId == request.auth.uid || isAdmin())
+        && incoming().uid == existing().uid
+        && incoming().role == existing().role
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'photoURL', 'updatedAt']);
+      allow delete: if isAdmin();
+    }
+
+    // Admins registry
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // Sample Bottles collection
+    match /samples/{sampleId} {
+      allow get: if isSignedIn() && isValidId(sampleId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && isValidId(sampleId)
+        && isValidSampleBottle(incoming())
+        && incoming().id == sampleId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(sampleId)
+        && isValidSampleBottle(incoming())
+        && incoming().id == existing().id
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (existing().stage != 'Sertifikat Terbit' || isAdmin())
+        && (
+          isAdmin() ||
+          (
+            existing().ownerId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['parameters', 'custodyLogs', 'stage', 'updatedAt'])
+          ) ||
+          (
+            existing().ownerId == request.auth.uid &&
+            incoming().stage == 'Sertifikat Terbit' &&
+            'certificate' in incoming() &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['stage', 'certificate', 'custodyLogs', 'updatedAt'])
+          )
+        );
+      allow delete: if isSignedIn() && isValidId(sampleId) && (existing().ownerId == request.auth.uid || isAdmin());
+
+      // Physical Bottle & Seal Photo Evidence Subcollection (Master Gate)
+      match /photos/{photoId} {
+        allow get: if isSignedIn()
+          && isValidId(sampleId)
+          && isValidId(photoId)
+          && (ownsParentSample(sampleId) || isAdmin());
+        allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+        allow create: if isSignedIn()
+          && isValidId(sampleId)
+          && isValidId(photoId)
+          && isValidSamplePhoto(incoming(), sampleId)
+          && incoming().id == photoId
+          && incoming().ownerId == request.auth.uid
+          && incoming().createdAt == request.time
+          && (ownsParentSampleAfter(sampleId) || isAdmin());
+        allow update: if false;
+        allow delete: if isSignedIn()
+          && isValidId(sampleId)
+          && isValidId(photoId)
+          && (ownsParentSample(sampleId) || isAdmin());
+      }
+    }
+
+    // Custom Parameter Standards collection
+    match /customParameters/{paramId} {
+      allow get: if isSignedIn() && isValidId(paramId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && isValidId(paramId)
+        && isValidCustomParameter(incoming())
+        && incoming().id == paramId
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(paramId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+  }
+}
